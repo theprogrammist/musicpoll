@@ -28,7 +28,7 @@ class Vote extends Model
     {
         $results = [];
 
-        if (false && Cache::has('current-rate')) {
+        if (Cache::has('current-rate')) {
             $results = Cache::get('current-rate');
         } else {
             $data = DB::select(
