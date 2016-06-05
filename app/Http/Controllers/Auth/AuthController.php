@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\User;
+use Mockery\CountValidator\Exception;
 use Validator;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Foundation\Auth\AuthenticatesAndRegistersUsers;
@@ -52,6 +54,7 @@ class AuthController extends Controller
             'name' => 'required|max:255',
             'email' => 'required|email|max:255|unique:users',
             'password' => 'required|min:6|confirmed',
+            'apitoken' => 'required|unique:users,api_token'
         ]);
     }
 
@@ -67,6 +70,25 @@ class AuthController extends Controller
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => bcrypt($data['password']),
+            'api_token' => $data['apitoken']
         ]);
+    }
+    
+    protected function adduser(Request $request) {
+        $data = $request->all();
+        $data += ['password_confirmation'=>$data['password']];
+
+        if($this->validator($data)->fails()) {
+            return response()->json(['status'=>'error','message'=>$this->validator($data)->messages()],400);
+        } else {
+            try {
+                $this->create($data);
+            } catch (\Exception $e) {
+                \Log::error( $e->getMessage() );
+                return response()->json(['status'=>'error','message'=>$e->getMessage()],400);
+            }
+        }
+
+        return response()->json(['status'=>'success','message'=>'New user created.'],200);
     }
 }
